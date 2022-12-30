@@ -1,6 +1,10 @@
 # quick-desktop
 基于qml的桌面软件开发框架
 
-# todo
-- 测试contentview
-- 不同dpi的屏幕之间移动的时候，qml窗口变化异常，qml的bug，Qt6没问题
+# 参考链接
+## cmake工程管理
+- [CMake入门和大型工程管理](https://www.jianshu.com/p/7e4aa4be239a)
+
+## 图标资源
+- [windows三个系统图标](https://www.iconfont.cn/collections/detail?cid=2237)
+- [免费图标库](https://icons8.com/)

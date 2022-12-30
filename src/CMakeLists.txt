@@ -1,9 +1,17 @@
+#
+# 主target定义
+#
+
+# 内部模块依赖
+add_subdirectory(uibase)
+
+# 组织源文件
 set(PROJECT_SOURCES
         main.cpp
         qml.qrc
 )
 
-# 主target定义
+# 声明target
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(${CMAKE_PROJECT_NAME}
         MANUAL_FINALIZATION
@@ -28,7 +36,7 @@ else()
 endif()
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick UIBase)
 
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER companyname.quickdesktop.com
