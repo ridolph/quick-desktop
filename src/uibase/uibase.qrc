@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>qmldir</file>
         <file>framelesswindow/FramelessWindow.qml</file>
         
         <file>res/framelesswindow/close.png</file>

@@ -1,0 +1,3 @@
+module uibase
+
+FramelessWindow 1.0 framelesswindow/FramelessWindow.qml

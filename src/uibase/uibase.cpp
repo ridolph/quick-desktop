@@ -7,10 +7,11 @@
 
 void UIBase::initResource(QQmlEngine& engine)
 {
-    // 使用静态库的方式导出uibase，c++&qml组件在这个函数注册
+    // 使用静态库的方式导出uibase，c++组件在这个函数注册
+    // qml组件在qmldir中声明
     // 不是用插件方式，省去了插件安装的步骤、qmldir等
 
-    // 添加qml组件的搜索路径
+    // 添加qml组件运行时搜索路径
     // engine.addImportPath("qrc:/");
     // qDebug() << "importPathList:" << engine.importPathList();
 
@@ -25,7 +26,7 @@ void UIBase::initResource(QQmlEngine& engine)
     // 注册c++组件
     qmlRegisterType<FramelessWindowHelper>(uri, 1, 0, "FramelessWindowHelper");
 
-    // 除了在qmldir中，也可以用以下方式注册qml组件
+    // 不用qmldir的话，也可以用以下方式注册qml组件
     // @uri uibase
-    qmlRegisterType(QUrl("qrc:/framelesswindow/FramelessWindow.qml"), uri, 1, 0, "FramelessWindow");
+    // qmlRegisterType(QUrl("qrc:/framelesswindow/FramelessWindow.qml"), uri, 1, 0, "FramelessWindow");
 }
