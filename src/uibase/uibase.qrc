@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">        
+    <qresource prefix="/">
         <file>framelesswindow/FramelessWindow.qml</file>
         
         <file>res/framelesswindow/close.png</file>

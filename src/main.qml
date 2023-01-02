@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Window 2.15
 import uibase 1.0
 
-FramelessWindow {    
+FramelessWindow {
     Rectangle {
         anchors.fill: parent
         anchors.margins: 10
