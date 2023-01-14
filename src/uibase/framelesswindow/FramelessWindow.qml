@@ -1,9 +1,11 @@
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtGraphicalEffects 1.12
+import QtQuick 2.15
+import QtQuick.Window 2.15
+import QtQuick.Controls 2.15
+import QtGraphicalEffects 1.15
 
 import uibase 1.0
+
+import "../component"
 
 Window {
     id: root
@@ -37,11 +39,11 @@ Window {
         objectName: "backgroundShadowItem"
         anchors.fill: parent
         // 阴影宽度
-        anchors.margins: isMaximizedOrFullScreen() ? 0 : 20
+        anchors.margins: isMaximizedOrFullScreen() ? 0 : 25
         // 圆角
         radius: isMaximizedOrFullScreen() ? 0 : 4
         // 边框颜色
-        color: "black"
+        color: "gray"
         Rectangle {
             id: backgroundItem
             anchors.fill: parent
@@ -63,6 +65,8 @@ Window {
                     visible: false
                 }
             }
+
+
 
             Item {
                 id: contentArea
@@ -173,6 +177,10 @@ Window {
         */
     }
 
+    Shadow {
+        target: backgroundShadowItem
+    }
+/*
     DropShadow {
         anchors.fill: backgroundShadowItem
         source: backgroundShadowItem
@@ -181,7 +189,7 @@ Window {
         cached: true
         color: "#555555"
     }
-
+*/
     /*
     MouseArea{
         property real xmouse;   //鼠标的x轴坐标
