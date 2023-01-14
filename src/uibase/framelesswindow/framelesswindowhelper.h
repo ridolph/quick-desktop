@@ -9,6 +9,7 @@ class QQuickWindow;
 class FramelessWindowHelper : public QObject {
     Q_OBJECT
     Q_PROPERTY(QQuickWindow* target READ target WRITE setTarget FINAL)
+    Q_PROPERTY(bool systemShadow WRITE setSystemShadow FINAL)
 
 public:
     explicit FramelessWindowHelper(QObject* parent = nullptr);
@@ -18,6 +19,7 @@ public:
 
     QQuickWindow* target() const;
     void setTarget(QQuickWindow* target);
+    void setSystemShadow(bool systemShadow);
     Q_INVOKABLE void targetShowMinimized();
 
 private:
@@ -32,4 +34,5 @@ private:
 
 private:
     QQuickWindow* m_target = nullptr;
+    bool m_systemShadow = false;
 };

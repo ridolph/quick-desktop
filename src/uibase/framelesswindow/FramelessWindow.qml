@@ -10,24 +10,47 @@ import "../component"
 Window {
     id: root
 
+    property int radius: 4
+    property int borderWidth: 1
+    property color borderColor: "black"
     // 默认属性：外部使用FramelessWindow时，没有赋值给任何属性的对象都会赋值给默认变量
     // data属性类似与children属性，保存所有子控件
     // 通过默认属性+data别名的方式，将外部使用FramelessWindow时的子控件赋值给contentArea
-    default property alias data : contentArea.data
+    default property alias data: contentArea.data
 
-    width: 640
-    height: 480
-    // 如果设置了fixsize，内部忽略Qt.WindowMaximizeButtonHint
-    minimumWidth: 320
-    //maximumWidth: 640
-    minimumHeight: 240
-    //maximumHeight: 480
-    visible: true
     title: qsTr("Hello World")
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowMaximizeButtonHint
     color: "transparent"
+    visible: true
 
-    function isMaximizedOrFullScreen() {
+    enum ShadowType {
+        SystemShadow,   // 系统阴影：不支持窗口圆角，不能修改阴影样式，性能最好
+        PictureShadow,  // 图片阴影：修改阴影样式需要替换图片
+        CodeShadow      // 代码绘制阴影：代码调整阴影样式，性能最差
+    }
+
+    // 不定义在顶级外部就不能访问了
+    QtObject {
+        id: internal
+
+        readonly property int shadowType: FramelessWindow.ShadowType.PictureShadow
+    }
+
+    function __getRadius() {
+        if (FramelessWindow.ShadowType.SystemShadow === internal.shadowType) {
+            return 0;
+        }
+
+        return __isMaximizedOrFullScreen() ? 0 : root.radius;
+    }
+    function __getShadowWidth() {
+        if (FramelessWindow.ShadowType.SystemShadow === internal.shadowType) {
+            return 0;
+        }
+
+        return __isMaximizedOrFullScreen() ? 0 : 25;
+    }
+    function __isMaximizedOrFullScreen() {
         return root.visibility === Window.Maximized || root.visibility === Window.FullScreen
     }
 
@@ -39,16 +62,16 @@ Window {
         objectName: "backgroundShadowItem"
         anchors.fill: parent
         // 阴影宽度
-        anchors.margins: isMaximizedOrFullScreen() ? 0 : 25
+        anchors.margins:__getShadowWidth()
         // 圆角
-        radius: isMaximizedOrFullScreen() ? 0 : 4
+        radius: __getRadius()
         // 边框颜色
-        color: "gray"
+        color: root.borderColor
         Rectangle {
             id: backgroundItem
             anchors.fill: parent
             // 边框宽度
-            anchors.margins: isMaximizedOrFullScreen() ? 0 : 0
+            anchors.margins: __isMaximizedOrFullScreen() ? 0 : root.borderWidth
             radius: parent.radius
             // 主背景色
             color: "#070709"
@@ -179,8 +202,9 @@ Window {
 
     Shadow {
         target: backgroundShadowItem
+        visible: FramelessWindow.ShadowType.PictureShadow === internal.shadowType ? true : false
     }
-/*
+
     DropShadow {
         anchors.fill: backgroundShadowItem
         source: backgroundShadowItem
@@ -188,9 +212,11 @@ Window {
         samples: 41
         cached: true
         color: "#555555"
+        visible: FramelessWindow.ShadowType.CodeShadow === internal.shadowType ? true : false
     }
-*/
+
     /*
+    // 这种方式的窗口拖动没有window snap&mac窗口边缘吸附效果
     MouseArea{
         property real xmouse;   //鼠标的x轴坐标
         property real ymouse;   //y轴坐标
@@ -210,12 +236,13 @@ Window {
     */
 
     DragHandler {
-        onActiveChanged: {if (active) root.startSystemMove(); console.log('aaaaaaa')}
+        onActiveChanged: {if (active) root.startSystemMove();}
         target: null
     }
 
     FramelessWindowHelper {
         id: framelessHelper
+        systemShadow: FramelessWindow.ShadowType.SystemShadow === internal.shadowType ? true : false
         Component.onCompleted: {
             // target赋值不能太早，否则root.flags属性还没赋值
             target = root

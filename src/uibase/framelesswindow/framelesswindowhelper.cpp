@@ -72,6 +72,10 @@ void FramelessWindowHelper::setTarget(QQuickWindow* target)
     updateWindowStyle();
 }
 
+void FramelessWindowHelper::setSystemShadow(bool systemShadow) {
+    m_systemShadow = systemShadow;
+}
+
 void FramelessWindowHelper::targetShowMinimized()
 {
     if (!m_target) {
@@ -324,13 +328,16 @@ void FramelessWindowHelper::updateWindowStyle()
     LONG currentStyle = ::GetWindowLong(hWnd, GWL_STYLE);
     ::SetWindowLong(hWnd, GWL_STYLE, currentStyle | newStyle);
 
-    /*
     // 使用系统阴影（和圆角冲突）
     if (QtWin::isCompositionEnabled()) {
-        QtWin::extendFrameIntoClientArea(m_target, 1, 1, 1, 1);
+        // 相关介绍 https://blog.csdn.net/thanklife/article/details/80108480
         // ::DwmExtendFrameIntoClientArea
+        if (m_systemShadow) {
+            QtWin::extendFrameIntoClientArea(m_target, 1, 1, 1, 1);
+        } else {
+            QtWin::extendFrameIntoClientArea(m_target, 0, 0, 0, 0);
+        }
     }
-    */
 }
 
 QRect FramelessWindowHelper::nativeAvailableGeometry() const

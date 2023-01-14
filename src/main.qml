@@ -4,6 +4,13 @@ import QtQuick.Window 2.15
 import uibase 1.0
 
 FramelessWindow {
+    width: 640
+    height: 480
+    minimumWidth: 320
+    //maximumWidth: 640
+    minimumHeight: 240
+    //maximumHeight: 480
+    radius: 6
 
     Rectangle {
         anchors.fill: parent
