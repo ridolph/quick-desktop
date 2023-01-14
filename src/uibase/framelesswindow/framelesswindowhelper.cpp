@@ -132,10 +132,11 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
     localPos /= dpi;
     QPoint globalPos = m_target->mapToGlobal(localPos);
 
-    QQuickItem* backgroundBorderItem = m_target->findChild<QQuickItem*>("backgroundBorderItem");
-    Q_CHECK_PTR(backgroundBorderItem);
+    // 拖拽移动窗口
+    QQuickItem* backgroundShadowItem = m_target->findChild<QQuickItem*>("backgroundShadowItem");
+    Q_CHECK_PTR(backgroundShadowItem);
     // drag border
-    QPoint borderItemPos = backgroundBorderItem->mapFromGlobal(globalPos).toPoint();
+    QPoint borderItemPos = backgroundShadowItem->mapFromGlobal(globalPos).toPoint();
     constexpr int dragWidth = 5;
     enum RegionMask {
         Client = 0x0000,
@@ -145,7 +146,7 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
         Bottom = 0x1000,
     };
 
-    auto borderRect = backgroundBorderItem->boundingRect();
+    auto borderRect = backgroundShadowItem->boundingRect();
     int borderLeftMin = borderRect.left() - dragWidth;
     int borderLeftMax = borderRect.left() + dragWidth;
     int borderTopMin = borderRect.top() - dragWidth;
@@ -195,6 +196,11 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
         return true;
     }
 
+    // 拖拽移动窗口
+    // 选择不在native中实现移动窗口的原因：
+    // 1. 只能设置一个区域，对区域内的事件，哪些给子控件处理，哪些作为移动窗口处理，需要自己判断
+    // 2. Qt5.15新增了startSystemMove，移动窗口效果和系统一样（windows snap&mac边缘吸附都有）
+#if 0
     // movableArea
     QQuickItem* movableArea = m_target->findChild<QQuickItem*>("movableArea");
     Q_CHECK_PTR(movableArea);
@@ -223,7 +229,7 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
             return true;
         }
     }
-
+#endif
     return false;
 }
 

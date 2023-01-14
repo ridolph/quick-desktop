@@ -33,11 +33,11 @@ Window {
     // 因为Rectangle的border会被子控件遮挡，还得设置子控件margins，
     // 有圆角的情况下OpacityMask会把边框裁掉
     Rectangle {
-        id: backgroundBorderItem
-        objectName: "backgroundBorderItem"
+        id: backgroundShadowItem
+        objectName: "backgroundShadowItem"
         anchors.fill: parent
         // 阴影宽度
-        anchors.margins: isMaximizedOrFullScreen() ? 0 : 4
+        anchors.margins: isMaximizedOrFullScreen() ? 0 : 20
         // 圆角
         radius: isMaximizedOrFullScreen() ? 0 : 4
         // 边框颜色
@@ -88,7 +88,7 @@ Window {
                     width: 20
                     height: 20
                     onClicked: {
-                        // 由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
+                        // windows平台由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
                         framelessHelper.targetShowMinimized()
                         //root.showMinimized()
                     }
@@ -174,12 +174,12 @@ Window {
     }
 
     DropShadow {
-        anchors.fill: backgroundBorderItem
-        source: backgroundBorderItem
-        radius: 4
-        samples: 9
+        anchors.fill: backgroundShadowItem
+        source: backgroundShadowItem
+        radius: 20
+        samples: 41
         cached: true
-        color: "darkgray"
+        color: "#555555"
     }
 
     /*
@@ -200,6 +200,11 @@ Window {
         }
     }
     */
+
+    DragHandler {
+        onActiveChanged: {if (active) root.startSystemMove(); console.log('aaaaaaa')}
+        target: null
+    }
 
     FramelessWindowHelper {
         id: framelessHelper
