@@ -1,8 +1,6 @@
-#include "framelesswindowhelper.h"
+#include "windownativeeventhandler.h"
 
-#ifdef Q_OS_WIN32
 #include <Windowsx.h>
-#endif
 
 #include <QDebug>
 #include <QMap>
@@ -11,28 +9,50 @@
 #include <QScreen>
 #include <QtWin>
 
-#include "windownativeeventfilterwin.h"
+#include "../framelesswindowhelper.h"
+#include "windownativeeventfilter.h"
 
 // 参考：
 // https://github.com/barry-ran/FramelessHelper/blob/patch-1/FramelessHelper/Kernels/NativeWindowHelper.cpp
 // https://github.com/Bringer-of-Light/Qt-Nice-Frameless-Window/blob/HEAD/framelesswindow/framelesswindow.cpp
 
-static QMap<quint64, FramelessWindowHelper*> s_FramelessWindowHelperMap;
+static QMap<quint64, WindowNativeEventHandler*> s_FramelessWindowHelperMap;
 
-FramelessWindowHelper::FramelessWindowHelper(QObject* parent)
-    : QObject(parent)
+WindowNativeEventHandler::WindowNativeEventHandler(FramelessWindowHelper* framelessWindowHelper, bool systemShadow)
+    : m_framelessWindowHelper(framelessWindowHelper)
 {
-#ifdef Q_OS_WIN32
-    WindowNativeEventFilterWin::instance().init();
-#endif
+    WindowNativeEventFilter::instance().init();
+
+    s_FramelessWindowHelperMap[m_framelessWindowHelper->target()->winId()] = this;
+
+    // WS_CAPTION|WS_THICKFRAME导致在两个dpi相同的屏幕间移动窗口时，QML绘制区域缩小
+    // SWP_FRAMECHANGED触发WM_NCCALCSIZE消息，进而去除多余的标题栏和标准边框区域
+    QObject::connect(m_framelessWindowHelper->target(), &QWindow::screenChanged, m_framelessWindowHelper->target(), [=](QScreen* screen) {
+        Q_UNUSED(screen);
+        auto hWnd = reinterpret_cast<HWND>(m_framelessWindowHelper->target()->winId());
+        ::SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+    });
+
+    updateWindowStyle();
+
+    // 使用系统阴影（和圆角冲突）
+    if (QtWin::isCompositionEnabled()) {
+        // 相关介绍 https://blog.csdn.net/thanklife/article/details/80108480
+        // ::DwmExtendFrameIntoClientArea
+        if (systemShadow) {
+            QtWin::extendFrameIntoClientArea(m_framelessWindowHelper->target(), 1, 1, 1, 1);
+        } else {
+            QtWin::extendFrameIntoClientArea(m_framelessWindowHelper->target(), 0, 0, 0, 0);
+        }
+    }
 }
 
-FramelessWindowHelper::~FramelessWindowHelper()
+WindowNativeEventHandler::~WindowNativeEventHandler()
 {
-    s_FramelessWindowHelperMap.remove(m_target->winId());
+    s_FramelessWindowHelperMap.remove(m_framelessWindowHelper->target()->winId());
 }
 
-bool FramelessWindowHelper::nativeEventFilter(const QByteArray& eventType, void* message, long* result)
+bool WindowNativeEventHandler::nativeEventFilter(const QByteArray& eventType, void* message, long* result)
 {
     Q_UNUSED(eventType);
 
@@ -47,50 +67,10 @@ bool FramelessWindowHelper::nativeEventFilter(const QByteArray& eventType, void*
     return s_FramelessWindowHelperMap[reinterpret_cast<quint64>(msg->hwnd)]->onNativeEventFilter(eventType, message, result);
 }
 
-QQuickWindow* FramelessWindowHelper::target() const
-{
-    return m_target;
-}
-
-void FramelessWindowHelper::setTarget(QQuickWindow* target)
-{
-    // m_target能且仅能设置一次非空值
-    Q_ASSERT(target);
-    Q_ASSERT(!m_target);
-
-    m_target = target;
-    s_FramelessWindowHelperMap[m_target->winId()] = this;
-
-    // WS_CAPTION|WS_THICKFRAME导致在两个dpi相同的屏幕间移动窗口时，QML绘制区域缩小
-    // SWP_FRAMECHANGED触发WM_NCCALCSIZE消息，进而去除多余的标题栏和标准边框区域
-    QObject::connect(m_target, &QWindow::screenChanged, m_target, [=](QScreen* screen) {
-        Q_UNUSED(screen);
-        auto hWnd = reinterpret_cast<HWND>(m_target->winId());
-        ::SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-    });
-
-    updateWindowStyle();
-}
-
-void FramelessWindowHelper::setSystemShadow(bool systemShadow) {
-    m_systemShadow = systemShadow;
-}
-
-void FramelessWindowHelper::targetShowMinimized()
-{
-    if (!m_target) {
-        return;
-    }
-
-    // 由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
-    auto oldStates = m_target->windowStates();
-    m_target->setWindowStates((oldStates & ~Qt::WindowActive) | Qt::WindowMinimized);
-}
-
-bool FramelessWindowHelper::onNativeEventFilter(const QByteArray& eventType, void* message, long* result)
+bool WindowNativeEventHandler::onNativeEventFilter(const QByteArray& eventType, void* message, long* result)
 {
     Q_UNUSED(eventType);
-    Q_CHECK_PTR(m_target);
+    Q_CHECK_PTR(m_framelessWindowHelper->target());
 
     MSG* msg = static_cast<MSG*>(message);
     switch (msg->message) {
@@ -116,7 +96,7 @@ bool FramelessWindowHelper::onNativeEventFilter(const QByteArray& eventType, voi
     }
 }
 
-bool FramelessWindowHelper::onShowWindowFilter(MSG* msg, long* result)
+bool WindowNativeEventHandler::onShowWindowFilter(MSG* msg, long* result)
 {
     Q_UNUSED(result);
     bool show = static_cast<bool>(msg->wParam);
@@ -125,19 +105,19 @@ bool FramelessWindowHelper::onShowWindowFilter(MSG* msg, long* result)
     return false;
 }
 
-bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
+bool WindowNativeEventHandler::onNcHitTestFilter(MSG* msg, long* result)
 {
     // native坐标转换为Qt坐标
     // 参考QHighDpi::fromNativeLocalPosition
     POINT nativePos = { GET_X_LPARAM(msg->lParam), GET_Y_LPARAM(msg->lParam) };
     ::ScreenToClient(msg->hwnd, &nativePos);
-    auto dpi = m_target->effectiveDevicePixelRatio();
+    auto dpi = m_framelessWindowHelper->target()->effectiveDevicePixelRatio();
     QPoint localPos { nativePos.x, nativePos.y };
     localPos /= dpi;
-    QPoint globalPos = m_target->mapToGlobal(localPos);
+    QPoint globalPos = m_framelessWindowHelper->target()->mapToGlobal(localPos);
 
     // 拖拽移动窗口
-    QQuickItem* backgroundShadowItem = m_target->findChild<QQuickItem*>("backgroundShadowItem");
+    QQuickItem* backgroundShadowItem = m_framelessWindowHelper->target()->findChild<QQuickItem*>("backgroundShadowItem");
     Q_CHECK_PTR(backgroundShadowItem);
     // drag border
     QPoint borderItemPos = backgroundShadowItem->mapFromGlobal(globalPos).toPoint();
@@ -165,10 +145,10 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
         | (Right * ((borderItemPos.x() > borderRightMin) && (borderItemPos.x() < borderRightMax)))
         | (Bottom * ((borderItemPos.y() > borderBottomMin) && (borderItemPos.y() < borderBottomMax)));
 
-    bool wResizable = m_target->minimumWidth() < m_target->maximumWidth();
-    bool hResizable = m_target->minimumHeight() < m_target->maximumHeight();
+    bool wResizable = m_framelessWindowHelper->target()->minimumWidth() < m_framelessWindowHelper->target()->maximumWidth();
+    bool hResizable = m_framelessWindowHelper->target()->minimumHeight() < m_framelessWindowHelper->target()->maximumHeight();
     // 最大化/全屏不允许拖拽改变窗口大小
-    if ((m_target->windowStates() & Qt::WindowMaximized) || (m_target->windowStates() & Qt::WindowFullScreen)) {
+    if ((m_framelessWindowHelper->target()->windowStates() & Qt::WindowMaximized) || (m_framelessWindowHelper->target()->windowStates() & Qt::WindowFullScreen)) {
         wResizable = false;
         hResizable = false;
     }
@@ -206,7 +186,7 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
     // 2. Qt5.15新增了startSystemMove，移动窗口效果和系统一样（windows snap&mac边缘吸附都有）
 #if 0
     // movableArea
-    QQuickItem* movableArea = m_target->findChild<QQuickItem*>("movableArea");
+    QQuickItem* movableArea = m_framelessWindowHelper->target()->findChild<QQuickItem*>("movableArea");
     Q_CHECK_PTR(movableArea);
     QPoint movablePos = movableArea->mapFromGlobal(globalPos).toPoint();
     // 如果movableArea中有子控件，则不处理拖动
@@ -237,7 +217,7 @@ bool FramelessWindowHelper::onNcHitTestFilter(MSG* msg, long* result)
     return false;
 }
 
-bool FramelessWindowHelper::onNcCalcSizeFilter(MSG* msg, long* result)
+bool WindowNativeEventHandler::onNcCalcSizeFilter(MSG* msg, long* result)
 {
     Q_UNUSED(result);
 
@@ -271,7 +251,7 @@ bool FramelessWindowHelper::onNcCalcSizeFilter(MSG* msg, long* result)
     return false;
 }
 
-bool FramelessWindowHelper::onGetMinMaxInfoFilter(MSG* msg, long* result)
+bool WindowNativeEventHandler::onGetMinMaxInfoFilter(MSG* msg, long* result)
 {
     return false;
     /*
@@ -287,19 +267,19 @@ bool FramelessWindowHelper::onGetMinMaxInfoFilter(MSG* msg, long* result)
     lpMinMaxInfo->ptMaxSize.x = availableGeometry.right() - availableGeometry.left();
     lpMinMaxInfo->ptMaxSize.y = availableGeometry.bottom() - availableGeometry.top();
 
-    lpMinMaxInfo->ptMinTrackSize.x = m_target->minimumWidth();
-    lpMinMaxInfo->ptMinTrackSize.y = m_target->minimumHeight();
-    lpMinMaxInfo->ptMaxTrackSize.x = m_target->maximumWidth();
-    lpMinMaxInfo->ptMaxTrackSize.y = m_target->maximumHeight();
+    lpMinMaxInfo->ptMinTrackSize.x = m_framelessWindowHelper->target()->minimumWidth();
+    lpMinMaxInfo->ptMinTrackSize.y = m_framelessWindowHelper->target()->minimumHeight();
+    lpMinMaxInfo->ptMaxTrackSize.x = m_framelessWindowHelper->target()->maximumWidth();
+    lpMinMaxInfo->ptMaxTrackSize.y = m_framelessWindowHelper->target()->maximumHeight();
 
     *result = 0;
     return true;
     */
 }
 
-void FramelessWindowHelper::updateWindowStyle()
+void WindowNativeEventHandler::updateWindowStyle()
 {
-    if (!m_target) {
+    if (!m_framelessWindowHelper->target()) {
         return;
     }
 
@@ -314,42 +294,31 @@ void FramelessWindowHelper::updateWindowStyle()
     //    而我们在WM_NCCALCSIZE消息中去除了多余的标题栏和标准边框区域
 
     // fixSize优先于Qt::WindowMaximizeButtonHint
-    bool fixWidth = m_target->minimumWidth() == m_target->maximumWidth();
-    bool fixHeight = m_target->minimumHeight() == m_target->maximumHeight();
+    bool fixWidth = m_framelessWindowHelper->target()->minimumWidth() == m_framelessWindowHelper->target()->maximumWidth();
+    bool fixHeight = m_framelessWindowHelper->target()->minimumHeight() == m_framelessWindowHelper->target()->maximumHeight();
     LONG newStyle = WS_CAPTION | WS_THICKFRAME;
-    if ((m_target->flags() & Qt::WindowMaximizeButtonHint) && !fixWidth && !fixHeight) {
+    if ((m_framelessWindowHelper->target()->flags() & Qt::WindowMaximizeButtonHint) && !fixWidth && !fixHeight) {
         newStyle |= WS_MAXIMIZEBOX;
     }
-    if (m_target->flags() & Qt::WindowMinimizeButtonHint) {
+    if (m_framelessWindowHelper->target()->flags() & Qt::WindowMinimizeButtonHint) {
         newStyle |= WS_MINIMIZEBOX;
     }
 
-    HWND hWnd = reinterpret_cast<HWND>(m_target->winId());
+    HWND hWnd = reinterpret_cast<HWND>(m_framelessWindowHelper->target()->winId());
     LONG currentStyle = ::GetWindowLong(hWnd, GWL_STYLE);
     ::SetWindowLong(hWnd, GWL_STYLE, currentStyle | newStyle);
-
-    // 使用系统阴影（和圆角冲突）
-    if (QtWin::isCompositionEnabled()) {
-        // 相关介绍 https://blog.csdn.net/thanklife/article/details/80108480
-        // ::DwmExtendFrameIntoClientArea
-        if (m_systemShadow) {
-            QtWin::extendFrameIntoClientArea(m_target, 1, 1, 1, 1);
-        } else {
-            QtWin::extendFrameIntoClientArea(m_target, 0, 0, 0, 0);
-        }
-    }
 }
 
-QRect FramelessWindowHelper::nativeAvailableGeometry() const
+QRect WindowNativeEventHandler::nativeAvailableGeometry() const
 {
     MONITORINFO mi { 0 };
     mi.cbSize = sizeof(MONITORINFO);
 
-    auto hWnd = reinterpret_cast<HWND>(m_target->winId());
+    auto hWnd = reinterpret_cast<HWND>(m_framelessWindowHelper->target()->winId());
     auto hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
     if (!hMonitor || !GetMonitorInfoW(hMonitor, &mi)) {
         Q_ASSERT(NULL != hMonitor);
-        return m_target->screen()->availableGeometry();
+        return m_framelessWindowHelper->target()->screen()->availableGeometry();
     }
 
     return QRect(mi.rcWork.left, mi.rcWork.top, mi.rcWork.right - mi.rcWork.left, mi.rcWork.bottom - mi.rcWork.top);

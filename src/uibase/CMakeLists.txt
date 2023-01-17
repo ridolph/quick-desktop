@@ -4,9 +4,11 @@ set(UIBASE_SOURCES
   uibase.cpp
   uibase.h
   framelesswindow/framelesswindowhelper.h
-  framelesswindow/framelesswindowhelper.cpp
-  framelesswindow/windownativeeventfilterwin.h
-  framelesswindow/windownativeeventfilterwin.cpp
+  framelesswindow/win/framelesswindowhelper.cpp
+  framelesswindow/win/windownativeeventfilter.h
+  framelesswindow/win/windownativeeventfilter.cpp
+  framelesswindow/win/windownativeeventhandler.h
+  framelesswindow/win/windownativeeventhandler.cpp
   uibase.qrc
 )
 

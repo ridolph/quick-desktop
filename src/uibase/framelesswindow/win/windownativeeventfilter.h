@@ -2,13 +2,13 @@
 
 #include <QAbstractNativeEventFilter>
 
-class WindowNativeEventFilterWin : public QAbstractNativeEventFilter {
+class WindowNativeEventFilter : public QAbstractNativeEventFilter {
 protected:
-    WindowNativeEventFilterWin();
-    ~WindowNativeEventFilterWin() override;
+    WindowNativeEventFilter();
+    ~WindowNativeEventFilter() override;
 
 public:
-    static WindowNativeEventFilterWin& instance();
+    static WindowNativeEventFilter& instance();
 
     void init();
 
