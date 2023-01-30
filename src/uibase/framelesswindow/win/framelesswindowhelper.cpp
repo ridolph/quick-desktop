@@ -1,7 +1,5 @@
 #include "../framelesswindowhelper.h"
 
-#include <QQuickWindow>
-
 #include "windownativeeventhandler.h"
 
 FramelessWindowHelper::FramelessWindowHelper(QObject* parent)

@@ -1,6 +1,11 @@
 # For VS2019 and Xcode 12+ support.
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
+if(APPLE)
+    # fix: Qt5.15在M1平台默认编译arm版本target却链接x86_64的Qt库，导致链接失败
+    set(CMAKE_OSX_ARCHITECTURES "x86_64")
+endif()
+
 # project通常指的是逻辑上相对独立、完整，能够独立编译的集合
 # 一个project可以单独设置名称、版本和语言
 # 一般你的项目中某一部分需要有独立的名称/版本/不同的语言，那么就可以放到单独的project中

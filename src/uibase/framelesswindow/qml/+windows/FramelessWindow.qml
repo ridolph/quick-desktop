@@ -5,20 +5,21 @@ import QtGraphicalEffects 1.15
 
 import uibase 1.0
 
-import "../component"
+import "../../component"
 
 Window {
     id: root
 
     property int radius: 4
-    property int borderWidth: 1
-    property color borderColor: "black"
+    // 暂时用不到边框
+    // property int borderWidth: 0
+    // property color borderColor: "black"
+
     // 默认属性：外部使用FramelessWindow时，没有赋值给任何属性的对象都会赋值给默认变量
     // data属性类似与children属性，保存所有子控件
     // 通过默认属性+data别名的方式，将外部使用FramelessWindow时的子控件赋值给contentArea
     default property alias data: contentArea.data
 
-    title: qsTr("Hello World")
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowMaximizeButtonHint
     color: "transparent"
     visible: true
@@ -36,6 +37,13 @@ Window {
         readonly property int shadowType: FramelessWindow.ShadowType.PictureShadow
     }
 
+    function __getFlags() {
+        if (FramelessWindow.ShadowType.SystemShadow === internal.shadowType) {
+            return 0;
+        }
+
+        return __isMaximizedOrFullScreen() ? 0 : root.radius;
+    }
     function __getRadius() {
         if (FramelessWindow.ShadowType.SystemShadow === internal.shadowType) {
             return 0;
@@ -66,12 +74,13 @@ Window {
         // 圆角
         radius: __getRadius()
         // 边框颜色
-        color: root.borderColor
+        //color: root.borderColor
         Rectangle {
             id: backgroundItem
             anchors.fill: parent
             // 边框宽度
-            anchors.margins: __isMaximizedOrFullScreen() ? 0 : root.borderWidth
+            // anchors.margins: __isMaximizedOrFullScreen() ? 0 : root.borderWidth
+            anchors.margins: 0
             radius: backgroundShadowItem.radius
             // 主背景色
             color: "#070709"
@@ -233,11 +242,6 @@ Window {
         }
     }
     */
-
-    DragHandler {
-        onActiveChanged: {if (active) root.startSystemMove();}
-        target: null
-    }
 
     FramelessWindowHelper {
         id: framelessHelper

@@ -28,5 +28,5 @@ void UIBase::initResource(QQmlEngine& engine)
 
     // 不用qmldir的话，也可以用以下方式注册qml组件
     // @uri uibase
-    // qmlRegisterType(QUrl("qrc:/framelesswindow/FramelessWindow.qml"), uri, 1, 0, "FramelessWindow");
+    // qmlRegisterType(QUrl("qrc:/framelesswindow/qml/FramelessWindow.qml"), uri, 1, 0, "FramelessWindow");
 }

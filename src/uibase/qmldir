@@ -1,4 +1,4 @@
 module uibase
 
 Shadow 1.0 component/Shadow.qml
-FramelessWindow 1.0 framelesswindow/FramelessWindow.qml
+FramelessWindow 1.0 framelesswindow/qml/FramelessWindow.qml
