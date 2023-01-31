@@ -155,8 +155,14 @@ void FramelessWindowHelper::setTarget(QQuickWindow* target)
     if (2 == standardWindowButtonHeightLevel) {
         [window setToolbarStyle:NSWindowToolbarStyleUnified];
     }
-}
 
-void FramelessWindowHelper::setSystemShadow(bool systemShadow) {
-    m_systemShadow = systemShadow;
+    if (!(m_windowFlags & Qt::WindowCloseButtonHint)) {
+        [[window standardWindowButton:NSWindowCloseButton] setHidden:YES];
+    }
+    if (!(m_windowFlags & Qt::WindowMinimizeButtonHint)) {
+        [[window standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
+    }
+    if (!(m_windowFlags & Qt::WindowMaximizeButtonHint) && !(m_windowFlags & Qt::WindowFullscreenButtonHint)) {
+        [[window standardWindowButton:NSWindowZoomButton] setHidden:YES];
+    }
 }

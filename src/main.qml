@@ -13,6 +13,9 @@ FramelessWindow {
     minimumHeight: 240
     //maximumHeight: 480
     radius: 6
+    // 自定义系统按钮的显示隐藏
+    windowFlags: Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint
+
 
     DragHandler {
         onActiveChanged: {if (active) root.startSystemMove();}

@@ -30,11 +30,6 @@ void FramelessWindowHelper::setTarget(QQuickWindow* target)
     m_windowNativeEventHandler = new WindowNativeEventHandler(this, m_systemShadow);
 }
 
-void FramelessWindowHelper::setSystemShadow(bool systemShadow)
-{
-    m_systemShadow = systemShadow;
-}
-
 void FramelessWindowHelper::targetShowMinimized()
 {
     if (!m_target) {

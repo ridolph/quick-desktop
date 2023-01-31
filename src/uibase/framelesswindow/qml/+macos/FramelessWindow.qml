@@ -9,6 +9,8 @@ Window {
 
     // mac下没用，只是为了兼容
     property int radius: 0
+    // 自己实现交通灯的显示隐藏，不用Qt的实现（Qt只是禁用，没有隐藏）
+    property alias windowFlags: framelessHelper.windowFlags
    
     // 默认属性：外部使用FramelessWindow时，没有赋值给任何属性的对象都会赋值给默认变量
     // data属性类似与children属性，保存所有子控件
