@@ -4,6 +4,7 @@ import QtQuick.Window 2.15
 import uibase 1.0
 
 FramelessWindow {
+    id: root
     title: qsTr("QuickDesktop")
     width: 640
     height: 480
