@@ -23,14 +23,9 @@ FramelessWindow {
     }
 
     Rectangle {
-        anchors.fill: parent
-        color: "green"
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: 100
-            height: 100
-            color: "red"
-        }
+        anchors.centerIn: parent
+        width: 100
+        height: 100
+        color: "red"
     }
 }

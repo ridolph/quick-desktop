@@ -11,6 +11,8 @@ Window {
     id: root
 
     property int radius: 4
+    property alias windowFlags: framelessHelper.windowFlags
+
     // 暂时用不到边框
     // property int borderWidth: 0
     // property color borderColor: "black"
@@ -83,7 +85,7 @@ Window {
             anchors.margins: 0
             radius: backgroundShadowItem.radius
             // 主背景色
-            color: "#070709"
+            color: "#000000"
 
             // 默认父控件radius不会影响子控件，所以使用OpacityMask裁剪
             // 独立OpacityMask要求目标Item visible: false，会导致该Item的childAt都返回nullptr，鼠标事件也无法响应
@@ -101,93 +103,58 @@ Window {
 
             Item {
                 id: contentArea
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: movableArea.bottom
-                anchors.bottom: parent.bottom
-            }
+                anchors.fill: parent
 
-            Rectangle {
-                id: movableArea
-                // c++使用objectName访问qml对象
-                objectName: "movableArea"
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 36
-                color: "transparent"
+                Row {
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    spacing: 2
+                    // 最大整数，保证在最上面
+                    z: 2147483647
 
-                Button {
-                    x: 0
-                    y: 10
-                    width: 20
-                    height: 20
-                    onClicked: {
-                        // windows平台由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
-                        framelessHelper.targetShowMinimized()
-                        //root.showMinimized()
-                    }
-                }
-                Button {
-                    x: 30
-                    y: 10
-                    width: 20
-                    height: 20
-                    onClicked: root.showMaximized()
-                }
-                Button {
-                    x: 60
-                    y: 10
-                    width: 20
-                    height: 20
-                    onClicked: root.showNormal()
-                }
-                Button {
-                    x: 90
-                    y: 10
-                    width: 20
-                    height: 20
-                    onClicked: root.close()
-                }
+                    SystemButton {
+                        width: 32
+                        height: 32
+                        hoveredColor: "#37393b"
+                        image: "qrc:/res/framelesswindow/minimize.png"
 
-                Rectangle {
-                    id: imageButton
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    width: 32
-                    height: 32
-                    color: "transparent"
-
-                    Image {
-                        anchors.centerIn: parent
-                        fillMode: Image.PreserveAspectFit
-                        source: "qrc:/res/framelesswindow/close.png"
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: parent.state = 'hover'
-                        onExited: parent.state = 'normal'
-                        onPressed: parent.state = 'normal'
-                        onReleased: containsMouse ? parent.state = 'hover' : parent.state = 'normal'
-                        onClicked: root.close()
-                    }
-
-                    states: [
-                        State {
-                            name: "normal"
-                            PropertyChanges { target: imageButton; color: "transparent" }
-                        },
-                        State {
-                            name: "hover"
-                            PropertyChanges { target: imageButton; color: "red" }
+                        onClicked: {
+                            // windows平台由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
+                            framelessHelper.targetShowMinimized()
+                            //Window.window.showMinimized()
                         }
-                    ]
-                }
-            }
+                    }
+                    SystemButton {
+                        width: 32
+                        height: 32
+                        hoveredColor: "#37393b"
+                        image: "qrc:/res/framelesswindow/maximize.png"
 
+                        visible: Window.window.visibility === Window.Windowed
+
+                        onClicked: Window.window.showMaximized()
+                    }
+                    SystemButton {
+                        width: 32
+                        height: 32
+                        hoveredColor: "#37393b"
+                        image: "qrc:/res/framelesswindow/restore.png"
+
+                        visible: Window.window.visibility === Window.Maximized | Window.window.visibility === Window.FullScreen
+
+                        onClicked: Window.window.showNormal()
+                    }
+                    SystemButton {
+                        width: 32
+                        height: 32
+                        hoveredColor: "red"
+                        image: "qrc:/res/framelesswindow/close.png"
+
+                        onClicked: Window.window.close()
+                    }
+
+                }
+            }            
         }
 
         // 这种独立OpacityMask的方式需要backgroundItem visible: false才能生效
