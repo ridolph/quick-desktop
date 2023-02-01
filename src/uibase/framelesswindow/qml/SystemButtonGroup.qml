@@ -4,6 +4,9 @@ import QtQuick.Window 2.15
 Row {
     property int buttonWidth: 32
     property int buttonheight: 32
+    property bool minimizeButtonVisible: true
+    property bool maximizeButtonVisible: true
+    property bool closeButtonVisible: true
 
     signal minimizeButtonClicked
     signal maximizeButtonClicked
@@ -23,6 +26,8 @@ Row {
         hoveredColor: "#37393b"
         image: "qrc:/res/framelesswindow/minimize.png"
 
+        visible: root.minimizeButtonVisible
+
         onClicked: root.minimizeButtonClicked()
     }
     SystemButton {
@@ -31,7 +36,7 @@ Row {
         hoveredColor: "#37393b"
         image: "qrc:/res/framelesswindow/maximize.png"
 
-        visible: Window.window.visibility === Window.Windowed
+        visible: root.maximizeButtonVisible && Window.window.visibility === Window.Windowed
 
         onClicked: root.maximizeButtonClicked()
     }
@@ -41,7 +46,7 @@ Row {
         hoveredColor: "#37393b"
         image: "qrc:/res/framelesswindow/restore.png"
 
-        visible: Window.window.visibility === Window.Maximized | Window.window.visibility === Window.FullScreen
+        visible: root.maximizeButtonVisible && (Window.window.visibility === Window.Maximized | Window.window.visibility === Window.FullScreen)
 
         onClicked: root.restoreButtonClicked();
     }
@@ -50,6 +55,8 @@ Row {
         height: root.buttonheight
         hoveredColor: "red"
         image: "qrc:/res/framelesswindow/close.png"
+
+        visible: root.closeButtonVisible
 
         onClicked: root.closeButtonClicked()
     }

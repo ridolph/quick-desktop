@@ -106,6 +106,10 @@ Window {
                 anchors.fill: parent
 
                 SystemButtonGroup {
+                    minimizeButtonVisible: root.windowFlags & Qt.WindowMinimizeButtonHint
+                    maximizeButtonVisible: root.windowFlags & Qt.WindowMaximizeButtonHint
+                    closeButtonVisible: root.windowFlags & Qt.WindowCloseButtonHint
+
                     onMinimizeButtonClicked: {
                         // windows平台由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
                         framelessHelper.targetShowMinimized()
