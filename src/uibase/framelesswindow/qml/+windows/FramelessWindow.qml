@@ -105,56 +105,17 @@ Window {
                 id: contentArea
                 anchors.fill: parent
 
-                Row {
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    spacing: 2
-                    // 最大整数，保证在最上面
-                    z: 2147483647
-
-                    SystemButton {
-                        width: 32
-                        height: 32
-                        hoveredColor: "#37393b"
-                        image: "qrc:/res/framelesswindow/minimize.png"
-
-                        onClicked: {
-                            // windows平台由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
-                            framelessHelper.targetShowMinimized()
-                            //Window.window.showMinimized()
-                        }
+                SystemButtonGroup {
+                    onMinimizeButtonClicked: {
+                        // windows平台由于Qt官方bug， 最大化-最小化-恢复，窗口不能恢复成最大化，需要自己实现最小化
+                        framelessHelper.targetShowMinimized()
+                        //Window.window.showMinimized()
                     }
-                    SystemButton {
-                        width: 32
-                        height: 32
-                        hoveredColor: "#37393b"
-                        image: "qrc:/res/framelesswindow/maximize.png"
-
-                        visible: Window.window.visibility === Window.Windowed
-
-                        onClicked: Window.window.showMaximized()
-                    }
-                    SystemButton {
-                        width: 32
-                        height: 32
-                        hoveredColor: "#37393b"
-                        image: "qrc:/res/framelesswindow/restore.png"
-
-                        visible: Window.window.visibility === Window.Maximized | Window.window.visibility === Window.FullScreen
-
-                        onClicked: Window.window.showNormal()
-                    }
-                    SystemButton {
-                        width: 32
-                        height: 32
-                        hoveredColor: "red"
-                        image: "qrc:/res/framelesswindow/close.png"
-
-                        onClicked: Window.window.close()
-                    }
-
+                    onMaximizeButtonClicked: Window.window.showMaximized()
+                    onRestoreButtonClicked: Window.window.showNormal()
+                    onCloseButtonClicked: Window.window.close()
                 }
-            }            
+            }
         }
 
         // 这种独立OpacityMask的方式需要backgroundItem visible: false才能生效

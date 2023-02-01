@@ -5,6 +5,7 @@
         <file>framelesswindow/qml/+macos/FramelessWindow.qml</file>
         <file>framelesswindow/qml/+windows/FramelessWindow.qml</file>
         <file>framelesswindow/qml/SystemButton.qml</file>
+        <file>framelesswindow/qml/SystemButtonGroup.qml</file>
         <file>res/framelesswindow/close.png</file>
         <file>res/framelesswindow/close@2x.png</file>
         <file>res/framelesswindow/close@3x.png</file>
