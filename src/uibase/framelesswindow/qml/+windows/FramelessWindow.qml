@@ -83,9 +83,7 @@ Window {
             // 边框宽度
             // anchors.margins: __isMaximizedOrFullScreen() ? 0 : root.borderWidth
             anchors.margins: 0
-            radius: backgroundShadowItem.radius
-            // 主背景色
-            color: "#000000"
+            radius: backgroundShadowItem.radius            
 
             // 默认父控件radius不会影响子控件，所以使用OpacityMask裁剪
             // 独立OpacityMask要求目标Item visible: false，会导致该Item的childAt都返回nullptr，鼠标事件也无法响应
