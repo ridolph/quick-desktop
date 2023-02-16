@@ -26,7 +26,7 @@ FramelessWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            height: 32
+            height: Qt.platform.os === "osx" ? 52 : 32
             color: "#1f1f1f"
 
             DragMoveWindowArea {
