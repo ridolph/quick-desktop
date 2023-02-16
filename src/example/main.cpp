@@ -1,7 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "uibase/uibase.h"
+#include "uibase.h"
 
 int main(int argc, char* argv[])
 {

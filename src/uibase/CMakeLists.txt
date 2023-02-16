@@ -30,6 +30,10 @@ add_library(${UIBASE_NAME} STATIC
   ${UIBASE_SOURCES}
 )
 
+# 指定要求依赖当前库的库都添加此包含目录
+# INTERFACE是指消费者需要的东西，而生产者则不需要
+target_include_directories(${UIBASE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(${UIBASE_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick)
 if(WIN32)
     target_link_libraries(${UIBASE_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::WinExtras)

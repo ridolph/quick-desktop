@@ -19,6 +19,7 @@ project(quick-desktop VERSION 0.0.1 LANGUAGES CXX)
 # 整个项目的全局配置（target无关）
 #
 
+# 自动添加CMAKE_CURRENT_BINARY_DIR和CMAKE_CURRENT_SOURCE_DIR到include_directories（全局包含目录，所有target生效）
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
